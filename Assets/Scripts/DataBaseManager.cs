@@ -289,13 +289,34 @@ public class DataBaseManager : MonoBehaviour
 
             // Get AuthorAvatar data with url
 
-            UnityWebRequest wwwAvatarRequest = UnityWebRequestTexture.GetTexture(postAuthorValues[4]);
-            yield return wwwAvatarRequest.SendWebRequest();
+            if (postAuthorValues[4] != "none")
+            {
+                UnityWebRequest wwwAvatarRequest = UnityWebRequest.Get(postAuthorValues[4]);
+                DownloadHandlerTexture avatarTexture_handler = new DownloadHandlerTexture();
+                wwwAvatarRequest.downloadHandler = avatarTexture_handler;
 
-            Texture avatarTexture = DownloadHandlerTexture.GetContent(wwwAvatarRequest);
+                yield return wwwAvatarRequest.SendWebRequest();
 
-            Sprite avatarSprite = Sprite.Create((Texture2D)avatarTexture, new Rect(0.0f, 0.0f, avatarTexture.width, avatarTexture.height), new Vector2(0.5f, 0.5f), 100.0f);
-            wallSpawnedItem.authorAvatar.sprite = avatarSprite; // apply the new sprite to the image
+                while (!wwwAvatarRequest.isDone)
+                {
+                    yield return wwwAvatarRequest;
+                }
+
+                if (wwwAvatarRequest.isDone)
+                {
+                    try
+                    {
+                        Texture2D avatarTexture = avatarTexture_handler.texture;
+
+                        Sprite avatarSprite = Sprite.Create(avatarTexture, new Rect(0.0f, 0.0f, avatarTexture.width, avatarTexture.height), new Vector2(0.5f, 0.5f), 100.0f);
+                        wallSpawnedItem.authorAvatar.sprite = avatarSprite; // apply the new sprite to the image
+                    }
+                    catch (System.Exception)
+                    {
+
+                    }
+                }
+            }
 
             wallSpawnedItem.SetUp();
             i++;

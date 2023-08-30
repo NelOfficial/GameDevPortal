@@ -75,16 +75,32 @@ public class WallItem : MonoBehaviour
         {
             wallImage.gameObject.SetActive(true);
 
-            www = UnityWebRequestTexture.GetTexture(url);
+            www = UnityWebRequest.Get(url);
+            DownloadHandlerTexture wallImage_handler = new DownloadHandlerTexture();
+            www.downloadHandler = wallImage_handler;
+
             yield return www.SendWebRequest();
+
+            while (!www.isDone)
+            {
+                yield return www;
+            }
 
             if (www.isDone)
             {
-                wallImageTexture = DownloadHandlerTexture.GetContent(www);
-                Rect rect = new Rect(0, 0, wallImageTexture.width, wallImageTexture.height);
-                wallImageSprite = Sprite.Create((Texture2D)wallImageTexture, rect, new Vector2(0.5f, 0.5f));
+                try
+                {
+                    wallImageTexture = wallImage_handler.texture;
 
-                wallImage.sprite = wallImageSprite;
+                    Rect rect = new Rect(0, 0, wallImageTexture.width, wallImageTexture.height);
+                    wallImageSprite = Sprite.Create((Texture2D)wallImageTexture, rect, new Vector2(0.5f, 0.5f));
+
+                    wallImage.sprite = wallImageSprite;
+                }
+                catch (Exception)
+                {
+
+                }
             }
         }
         else if (url == "none")
